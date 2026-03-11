@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="Ecom.Application/Ecom.Application.csproj" />
+  <Project Path="Ecom.Domain/Ecom.Domain.csproj" />
+  <Project Path="Ecom.Infrastructure/Ecom.Infrastructure.csproj" />
+  <Project Path="Ecom.Shared/Ecom.Shared.csproj" />
+  <Project Path="Ecom.WebAPI/Ecom.WebAPI.csproj" />
+</Solution>
