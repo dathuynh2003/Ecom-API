@@ -21,6 +21,9 @@ namespace Ecom.Infrastructure.Persistence.DBContext
         public DbSet<RefreshToken> RefreshTokens { get; set; }
         public DbSet<Category> Categories { get; set; }
         public DbSet<Brand> Brands { get; set; }
+        public DbSet<SpecificationKey> SpecificationKeys { get; set; }
+        public DbSet<CategorySpecificationKey> CategorySpecificationKeys { get; set; }
+        public DbSet<ProductSpecificationKey> ProductSpecificationKeys { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -96,7 +99,33 @@ namespace Ecom.Infrastructure.Persistence.DBContext
                 .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("fk_products_product_images");
 
-            // 9. ID properties configuration
+            // 9. SpecificationKeys - Category/Product: Many-to-Many
+            modelBuilder.Entity<CategorySpecificationKey>()
+                .HasOne(csk => csk.Category)
+                .WithMany(c => c.CategorySpecificationKeys)
+                .HasForeignKey(csk => csk.CategoryId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("fk_categories_category_spec_keys");
+            modelBuilder.Entity<CategorySpecificationKey>()
+                .HasOne(csk => csk.SpecificationKey)
+                .WithMany(sk => sk.CategorySpecificationKeys)
+                .HasForeignKey(csk => csk.SpecificationKeyId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("fk_spec_keys_category_spec_keys");
+            modelBuilder.Entity<ProductSpecificationKey>()
+                .HasOne(psk => psk.Product)
+                .WithMany(p => p.ProductSpecificationKeys)
+                .HasForeignKey(psk => psk.ProductId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("fk_products_product_spec_keys");
+            modelBuilder.Entity<ProductSpecificationKey>()
+                .HasOne(psk => psk.SpecificationKey)
+                .WithMany(sk => sk.ProductSpecificationKeys)
+                .HasForeignKey(psk => psk.SpecificationKeyId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("fk_spec_keys_product_spec_keys");
+
+            // ID properties configuration
             modelBuilder.Entity<User>().HasKey(u => u.Id);
             modelBuilder.Entity<Address>().HasKey(a => a.Id);
             modelBuilder.Entity<RefreshToken>().HasKey(p => p.Id);
@@ -117,6 +146,10 @@ namespace Ecom.Infrastructure.Persistence.DBContext
             modelBuilder.Entity<Category>().Property(c => c.Id).ValueGeneratedOnAdd();
             modelBuilder.Entity<Brand>().HasKey(b => b.Id);
             modelBuilder.Entity<Brand>().Property(b => b.Id).ValueGeneratedOnAdd();
+            modelBuilder.Entity<SpecificationKey>().HasKey(sk => sk.Id);
+            modelBuilder.Entity<SpecificationKey>().Property(sk => sk.Id).ValueGeneratedOnAdd();
+            modelBuilder.Entity<CategorySpecificationKey>().HasKey(csk => new { csk.CategoryId, csk.SpecificationKeyId });
+            modelBuilder.Entity<ProductSpecificationKey>().HasKey(psk => new { psk.ProductId, psk.SpecificationKeyId });
 
             // Property configurations + Required + MaxLength
             modelBuilder.Entity<User>(entity =>
@@ -139,6 +172,24 @@ namespace Ecom.Infrastructure.Persistence.DBContext
                 b.Property(p => p.Name).IsRequired().HasMaxLength(255);
                 b.Property(p => p.Description).HasMaxLength(2000);
                 b.Property(p => p.Price).HasPrecision(18, 3); // Decimal precision
+
+                b.Property(p => p.Slug).IsRequired().HasMaxLength(255);
+                b.HasIndex(p => p.Slug).IsUnique().HasDatabaseName("IX_Products_Slug_Unique");
+            });
+            modelBuilder.Entity<Category>(b =>
+            {
+                b.Property(c => c.Name).IsRequired().HasMaxLength(255);
+                b.Property(c => c.Slug).IsRequired().HasMaxLength(255);
+                b.HasIndex(c => c.Slug).IsUnique().HasDatabaseName("IX_Categories_Slug_Unique");
+            });
+            modelBuilder.Entity<Brand>(b =>
+            {
+                b.Property(br => br.Name).IsRequired().HasMaxLength(255);
+                b.Property(br => br.Slug).IsRequired().HasMaxLength(255);
+
+                b.HasIndex(br => br.Slug)
+                    .IsUnique()
+                    .HasDatabaseName("IX_Brands_Slug_Unique");
             });
             modelBuilder.Entity<Order>(b =>
             {
@@ -150,12 +201,32 @@ namespace Ecom.Infrastructure.Persistence.DBContext
                 b.Property(p => p.TransactionCode).HasMaxLength(200);
                 b.Property(p => p.Provider).HasMaxLength(20);
             });
+            modelBuilder.Entity<SpecificationKey>(b =>
+            {
+                b.Property(sk => sk.Name)
+                    .IsRequired()
+                    .HasMaxLength(255);
+
+                b.Property(sk => sk.Unit)
+                    .HasMaxLength(50);
+            });
+            modelBuilder.Entity<CategorySpecificationKey>(b =>
+            {
+                b.Property(x => x.DisplayOrder)
+                    .IsRequired();
+            });
+            modelBuilder.Entity<ProductSpecificationKey>(b =>
+            {
+                b.Property(psk => psk.Value)
+                    .IsRequired()
+                    .HasMaxLength(500);
+            });
 
             // Unique Indexes
             modelBuilder.Entity<User>()
-                .HasIndex(u => u.Email)
-                .IsUnique()
-                .HasDatabaseName("IX_Users_Email_Unique");
+            .HasIndex(u => u.Email)
+            .IsUnique()
+            .HasDatabaseName("IX_Users_Email_Unique");
 
             modelBuilder.Entity<RefreshToken>()
                 .HasIndex(rt => rt.Token)
@@ -203,7 +274,7 @@ namespace Ecom.Infrastructure.Persistence.DBContext
                 CreatedAt = DateTime.UtcNow.AddDays(-1),
                 IsActive = true,
                 Role = UserRole.Admin,  // Enum → int
-                CartID = Guid.Empty,
+                CartID = AdminId,
                 IsDeleted = false,
             });
         }

@@ -9,12 +9,14 @@ namespace Ecom.Domain.Entities
         public string Description { get; private set; } = string.Empty;
         public decimal Price { get; private set; }
         public int StockQuantity { get; private set; }
+        public string Slug { get; private set; }
         public int CategoryId { get; private set; }
         public int BrandId { get; private set; }
         public Category Category { get; private set; }
         public Brand Brand { get; private set; }
-        public ICollection<ProductImage> Images { get; private set; } = new List<ProductImage>();
-        public static Product Create(string name, string description, decimal price, int stockQuantity, int categoryId, int brandId)
+        public ICollection<ProductImage> Images { get; private set; }
+        public ICollection<ProductSpecificationKey> ProductSpecificationKeys { get; private set; }
+        public static Product Create(string name, string description, decimal price, int stockQuantity, int categoryId, int brandId, string slug)
         {
             if (string.IsNullOrWhiteSpace(name))
                 throw new ArgumentException("Name required");
@@ -29,7 +31,8 @@ namespace Ecom.Domain.Entities
                 Price = price,
                 StockQuantity = stockQuantity,
                 CategoryId = categoryId,
-                BrandId = brandId
+                BrandId = brandId,
+                Slug = slug,
             };
         }
     }

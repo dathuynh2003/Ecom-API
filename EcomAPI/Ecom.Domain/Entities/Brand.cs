@@ -7,6 +7,7 @@ namespace Ecom.Domain.Entities
         public int Id { get; private set; }
         public string Name { get; private set; }
         public string? LogoUrl { get; private set; } = string.Empty;
+        public string Slug { get; private set; }
         public ICollection<Product> Products { get; private set; }
     }
 }
