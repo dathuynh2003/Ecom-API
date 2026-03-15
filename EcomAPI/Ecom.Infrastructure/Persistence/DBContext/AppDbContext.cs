@@ -24,6 +24,7 @@ namespace Ecom.Infrastructure.Persistence.DBContext
         public DbSet<SpecificationKey> SpecificationKeys { get; set; }
         public DbSet<CategorySpecificationKey> CategorySpecificationKeys { get; set; }
         public DbSet<ProductSpecificationKey> ProductSpecificationKeys { get; set; }
+        public DbSet<EmailVerificationToken> EmailVerificationTokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -124,6 +125,13 @@ namespace Ecom.Infrastructure.Persistence.DBContext
                 .HasForeignKey(psk => psk.SpecificationKeyId)
                 .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("fk_spec_keys_product_spec_keys");
+            // 10. User - EmailVerificationToken: One-to-Many
+            modelBuilder.Entity<EmailVerificationToken>()
+                .HasOne(evt => evt.User)
+                .WithMany(u => u.EmailVerificationTokens)
+                .HasForeignKey(evt => evt.UserId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("fk_users_email_verification_tokens");
 
             // ID properties configuration
             modelBuilder.Entity<User>().HasKey(u => u.Id);
@@ -132,6 +140,7 @@ namespace Ecom.Infrastructure.Persistence.DBContext
             modelBuilder.Entity<Cart>().HasKey(p => p.Id);
             modelBuilder.Entity<Order>().HasKey(p => p.Id);
             modelBuilder.Entity<Payment>().HasKey(p => p.Id);
+            modelBuilder.Entity<EmailVerificationToken>().HasKey(p => p.Id);
 
             // int IDs auto-increment
             modelBuilder.Entity<CartItem>().HasKey(ci => ci.Id);
@@ -148,6 +157,8 @@ namespace Ecom.Infrastructure.Persistence.DBContext
             modelBuilder.Entity<Brand>().Property(b => b.Id).ValueGeneratedOnAdd();
             modelBuilder.Entity<SpecificationKey>().HasKey(sk => sk.Id);
             modelBuilder.Entity<SpecificationKey>().Property(sk => sk.Id).ValueGeneratedOnAdd();
+
+            // Composite keys for many-to-many join tables
             modelBuilder.Entity<CategorySpecificationKey>().HasKey(csk => new { csk.CategoryId, csk.SpecificationKeyId });
             modelBuilder.Entity<ProductSpecificationKey>().HasKey(psk => new { psk.ProductId, psk.SpecificationKeyId });
 
@@ -221,6 +232,19 @@ namespace Ecom.Infrastructure.Persistence.DBContext
                     .IsRequired()
                     .HasMaxLength(500);
             });
+            modelBuilder.Entity<EmailVerificationToken>(b =>
+            {
+                b.Property(evt => evt.Token)
+                    .IsRequired();
+                b.HasIndex(evt => evt.Token)
+                   .IsUnique();
+                b.Property(evt => evt.ExpiresAt)
+                    .IsRequired();
+                b.Property(evt => evt.IsUsed)
+                    .IsRequired();
+                b.Property(evt => evt.UserId)
+                    .IsRequired();
+            });
 
             // Unique Indexes
             modelBuilder.Entity<User>()
@@ -273,7 +297,7 @@ namespace Ecom.Infrastructure.Persistence.DBContext
                 Password = BCrypt.Net.BCrypt.HashPassword("admin123"),
                 CreatedAt = DateTime.UtcNow.AddDays(-1),
                 IsActive = true,
-                Role = UserRole.Admin,  // Enum → int
+                Role = UserRole.Admin,
                 CartID = AdminId,
                 IsDeleted = false,
             });

@@ -15,9 +15,10 @@ namespace Ecom.Domain.Entities
         public bool IsActive { get; private set; } = false;
         public string? AvatarUrl { get; private set; }
         public UserRole Role { get; private set; }
-        public ICollection<Address> Addresses { get; private set; } = new List<Address>();
-        public Guid CartID { get; private set; }
-        public Cart Cart { get; private set; }
+        public ICollection<Address> Addresses { get; private set; }
+        public Guid CartID { get; set; }
+        public Cart Cart { get; set; }
+        public ICollection<EmailVerificationToken> EmailVerificationTokens { get; private set; }
 
         public static User Create (string name, string email, string phone, DateOnly dob, string password, UserRole role)
         {

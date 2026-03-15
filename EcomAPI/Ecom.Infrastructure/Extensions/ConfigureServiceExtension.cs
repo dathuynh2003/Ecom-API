@@ -1,4 +1,5 @@
 ﻿using Ecom.Application.Abstractions.Auth;
+using Ecom.Application.Abstractions.Mail;
 using Ecom.Application.Abstractions.Persistence;
 using Ecom.Infrastructure.Persistence.Repositories;
 using Ecom.Infrastructure.Services;
@@ -13,9 +14,11 @@ namespace Ecom.Infrastructure.Extensions
             //Repositories
             _ = services.AddScoped(typeof(IGenericRepository<,>), typeof(GenericRepository<,>));
             _ = services.AddScoped<IUserRepository, UserRepository>();
+            _ = services.AddScoped<IEmailVerificationTokenRepository, EmailVerificationTokenRepository>();
 
             // Services
             _ = services.AddScoped<IJwtService, JwtTokenService>();
+            _ = services.AddScoped<IEmailService, EmailService>();
             return services;
         }
     }

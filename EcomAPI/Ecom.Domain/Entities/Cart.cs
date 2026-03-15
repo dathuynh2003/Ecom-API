@@ -9,5 +9,8 @@ namespace Ecom.Domain.Entities
         public User? User { get; private set; }
         public string SessionID { get; private set; } = string.Empty;  // For guest carts
         public ICollection<CartItem> Items { get; private set; } = new List<CartItem>();
+
+        public static Cart CreateForUser(Guid userId) => new Cart { UserId = userId };
+        public static Cart CreateForGuest(string sessionId) => new Cart { SessionID = sessionId };
     }
 }

@@ -7,6 +7,11 @@ namespace Ecom.Infrastructure.Persistence.Repositories
 {
     public class UserRepository(AppDbContext context) : GenericRepository<User, Guid>(context), IUserRepository
     {
+        public async Task<User?> GetByEmailAsync(string email)
+        {
+            return await _context.Users.FirstOrDefaultAsync(u => u.Email == email && u.IsDeleted == false);
+        }
+
         /// <summary>
         /// Async method to authenticate a user based on their account(email or phone) and password. 
         /// This method will check the provided credentials against the stored user data and return the corresponding User entity if the authentication is successful. 

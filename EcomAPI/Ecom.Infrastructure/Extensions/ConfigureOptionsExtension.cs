@@ -11,6 +11,7 @@ namespace Ecom.Infrastructure.Extensions
             _ = services.Configure<JwtSettings>(configuration.GetSection(nameof(JwtSettings)));
             _ = services.Configure<DatabaseOptions>(configuration.GetSection(nameof(DatabaseOptions)));
             _ = services.Configure<PayOSOptions>(configuration.GetSection(nameof(PayOSOptions)));
+            _ = services.Configure<EmailSettings>(configuration.GetSection(nameof(EmailSettings)));
             return services;
         }
     }

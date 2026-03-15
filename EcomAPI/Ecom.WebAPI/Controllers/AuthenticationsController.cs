@@ -58,5 +58,38 @@ namespace Ecom.WebAPI.Controllers
             return BadRequest(result);
 
         }
+
+        [HttpPost("register")]
+        [ProducesResponseType(typeof(ApiResponse<RegisterResponse>), (int)HttpStatusCode.OK)]
+        [ProducesResponseType((int)HttpStatusCode.BadRequest)]
+        public async Task<IActionResult> Register([FromBody] RegisterRequest request)
+        {
+            var result = await _authUseCase.RegisterAsync(request);
+            if (result.Success)
+                return Ok(result);
+            return BadRequest(result);
+        }
+
+        [HttpGet("verify-email")]
+        [ProducesResponseType(typeof(ApiResponse<string>), (int)HttpStatusCode.OK)]
+        [ProducesResponseType((int)HttpStatusCode.BadRequest)]
+        public async Task<IActionResult> VerifyEmail([FromQuery] string token)
+        {
+            var result = await _authUseCase.VerifyEmailAsync(token);
+            if (result.Success)
+                return Ok(result);
+            return BadRequest(result);
+        }
+
+        [HttpPost("resend-verification-email")]
+        [ProducesResponseType(typeof(ApiResponse<string>), (int)HttpStatusCode.OK)]
+        [ProducesResponseType((int)HttpStatusCode.BadRequest)]
+        public async Task<IActionResult> ResendVerificationEmail([FromQuery] string email)
+        {
+            var result = await _authUseCase.ResendVerificationEmailAsync(email);
+            if (result.Success)
+                return Ok(result);
+            return BadRequest(result);
+        }
     }
 }
