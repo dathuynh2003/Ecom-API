@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Ecom.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260310054133_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20260316091702_InitCreate")]
+    partial class InitCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -68,9 +68,19 @@ namespace Ecom.Infrastructure.Persistence.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Slug")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Brands_Slug_Unique");
 
                     b.ToTable("Brands");
                 });
@@ -85,7 +95,6 @@ namespace Ecom.Infrastructure.Persistence.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<string>("SessionID")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
@@ -101,6 +110,14 @@ namespace Ecom.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("Carts");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("660e8400-e29b-41d4-a716-446655440000"),
+                            IsDeleted = false,
+                            UserId = new Guid("550e8400-e29b-41d4-a716-446655440000")
+                        });
                 });
 
             modelBuilder.Entity("Ecom.Domain.Entities.CartItem", b =>
@@ -148,11 +165,42 @@ namespace Ecom.Infrastructure.Persistence.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Slug")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Categories_Slug_Unique");
+
                     b.ToTable("Categories");
+                });
+
+            modelBuilder.Entity("Ecom.Domain.Entities.CategorySpecificationKey", b =>
+                {
+                    b.Property<int>("CategoryId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("SpecificationKeyId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.HasKey("CategoryId", "SpecificationKeyId");
+
+                    b.HasIndex("SpecificationKeyId");
+
+                    b.ToTable("CategorySpecificationKeys");
                 });
 
             modelBuilder.Entity("Ecom.Domain.Entities.Order", b =>
@@ -304,6 +352,11 @@ namespace Ecom.Infrastructure.Persistence.Migrations
                         .HasPrecision(18, 3)
                         .HasColumnType("numeric(18,3)");
 
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
                     b.Property<int>("StockQuantity")
                         .HasColumnType("integer");
 
@@ -314,6 +367,10 @@ namespace Ecom.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("CategoryId")
                         .HasDatabaseName("IX_Products_CategoryId");
+
+                    b.HasIndex("Slug")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Products_Slug_Unique");
 
                     b.ToTable("Products");
                 });
@@ -344,6 +401,29 @@ namespace Ecom.Infrastructure.Persistence.Migrations
                     b.HasIndex("ProductId");
 
                     b.ToTable("ProductImages");
+                });
+
+            modelBuilder.Entity("Ecom.Domain.Entities.ProductSpecificationKey", b =>
+                {
+                    b.Property<int>("ProductId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("SpecificationKeyId")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.HasKey("ProductId", "SpecificationKeyId");
+
+                    b.HasIndex("SpecificationKeyId");
+
+                    b.ToTable("ProductSpecificationKeys");
                 });
 
             modelBuilder.Entity("Ecom.Domain.Entities.RefreshToken", b =>
@@ -379,6 +459,31 @@ namespace Ecom.Infrastructure.Persistence.Migrations
                     b.ToTable("RefreshTokens");
                 });
 
+            modelBuilder.Entity("Ecom.Domain.Entities.SpecificationKey", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("Unit")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("SpecificationKeys");
+                });
+
             modelBuilder.Entity("Ecom.Domain.Entities.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -388,7 +493,7 @@ namespace Ecom.Infrastructure.Persistence.Migrations
                     b.Property<string>("AvatarUrl")
                         .HasColumnType("text");
 
-                    b.Property<Guid>("CartID")
+                    b.Property<Guid>("CartId")
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")
@@ -438,17 +543,52 @@ namespace Ecom.Infrastructure.Persistence.Migrations
                         new
                         {
                             Id = new Guid("550e8400-e29b-41d4-a716-446655440000"),
-                            CartID = new Guid("00000000-0000-0000-0000-000000000000"),
-                            CreatedAt = new DateTime(2026, 3, 9, 5, 41, 32, 150, DateTimeKind.Utc).AddTicks(667),
+                            CartId = new Guid("660e8400-e29b-41d4-a716-446655440000"),
+                            CreatedAt = new DateTime(2026, 3, 15, 9, 17, 1, 327, DateTimeKind.Utc).AddTicks(5908),
                             Dob = new DateOnly(2003, 1, 31),
                             Email = "admin@ecom.com",
                             IsActive = true,
                             IsDeleted = false,
                             Name = "Admin",
-                            Password = "$2a$11$Jcq3THwEEsqt929Vx6q1yO0NTFrioO2sRBYo1GDO53.3y5U5xcwum",
+                            Password = "$2a$11$t8mQ1b.d9lgkEIsMUuMCh.q69EHOvadWCtOR9REHkvqVdwWGGaVga",
                             PhoneNumber = "0839095701",
                             Role = 0
                         });
+                });
+
+            modelBuilder.Entity("Ecom.Domain.Entities.UserToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsUsed")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Token")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserTokens");
                 });
 
             modelBuilder.Entity("Ecom.Domain.Entities.Address", b =>
@@ -492,6 +632,27 @@ namespace Ecom.Infrastructure.Persistence.Migrations
                     b.Navigation("Cart");
 
                     b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("Ecom.Domain.Entities.CategorySpecificationKey", b =>
+                {
+                    b.HasOne("Ecom.Domain.Entities.Category", "Category")
+                        .WithMany("CategorySpecificationKeys")
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_categories_category_spec_keys");
+
+                    b.HasOne("Ecom.Domain.Entities.SpecificationKey", "SpecificationKey")
+                        .WithMany("CategorySpecificationKeys")
+                        .HasForeignKey("SpecificationKeyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_spec_keys_category_spec_keys");
+
+                    b.Navigation("Category");
+
+                    b.Navigation("SpecificationKey");
                 });
 
             modelBuilder.Entity("Ecom.Domain.Entities.Order", b =>
@@ -570,6 +731,27 @@ namespace Ecom.Infrastructure.Persistence.Migrations
                     b.Navigation("Product");
                 });
 
+            modelBuilder.Entity("Ecom.Domain.Entities.ProductSpecificationKey", b =>
+                {
+                    b.HasOne("Ecom.Domain.Entities.Product", "Product")
+                        .WithMany("ProductSpecificationKeys")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_products_product_spec_keys");
+
+                    b.HasOne("Ecom.Domain.Entities.SpecificationKey", "SpecificationKey")
+                        .WithMany("ProductSpecificationKeys")
+                        .HasForeignKey("SpecificationKeyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_spec_keys_product_spec_keys");
+
+                    b.Navigation("Product");
+
+                    b.Navigation("SpecificationKey");
+                });
+
             modelBuilder.Entity("Ecom.Domain.Entities.RefreshToken", b =>
                 {
                     b.HasOne("Ecom.Domain.Entities.User", "User")
@@ -578,6 +760,18 @@ namespace Ecom.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_users_refresh_tokens");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Ecom.Domain.Entities.UserToken", b =>
+                {
+                    b.HasOne("Ecom.Domain.Entities.User", "User")
+                        .WithMany("UserTokens")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_users_users_tokens");
 
                     b.Navigation("User");
                 });
@@ -594,6 +788,8 @@ namespace Ecom.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Ecom.Domain.Entities.Category", b =>
                 {
+                    b.Navigation("CategorySpecificationKeys");
+
                     b.Navigation("Products");
                 });
 
@@ -605,6 +801,15 @@ namespace Ecom.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Ecom.Domain.Entities.Product", b =>
                 {
                     b.Navigation("Images");
+
+                    b.Navigation("ProductSpecificationKeys");
+                });
+
+            modelBuilder.Entity("Ecom.Domain.Entities.SpecificationKey", b =>
+                {
+                    b.Navigation("CategorySpecificationKeys");
+
+                    b.Navigation("ProductSpecificationKeys");
                 });
 
             modelBuilder.Entity("Ecom.Domain.Entities.User", b =>
@@ -613,6 +818,8 @@ namespace Ecom.Infrastructure.Persistence.Migrations
 
                     b.Navigation("Cart")
                         .IsRequired();
+
+                    b.Navigation("UserTokens");
                 });
 #pragma warning restore 612, 618
         }

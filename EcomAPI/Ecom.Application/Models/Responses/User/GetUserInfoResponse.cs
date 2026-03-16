@@ -13,7 +13,7 @@ namespace Ecom.Application.Models.Responses.User
         public string? AvatarUrl { get; set; }
         public string RoleName { get; set; }
         public ICollection<Address> Addresses { get; set; } = new List<Address>();
-        public Guid CartID { get; set; }
+        public Guid CartId { get; set; }
         //public Cart Cart { get; private set; }
     }
 }

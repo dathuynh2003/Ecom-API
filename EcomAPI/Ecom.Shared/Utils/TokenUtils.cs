@@ -6,7 +6,7 @@ namespace Ecom.Shared.Utils
     {
         public static string GenerateToken()
         {
-            return Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
+            return Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
         }
     }
 }

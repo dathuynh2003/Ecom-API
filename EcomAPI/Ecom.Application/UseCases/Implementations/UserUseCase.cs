@@ -44,7 +44,7 @@ namespace Ecom.Application.UseCases.Implementations
                 AvatarUrl = user.AvatarUrl,
                 RoleName = user.Role.ToString(),
                 Addresses = user.Addresses,
-                CartID = user.CartID
+                CartId = user.CartId
             };
 
             return ApiResponse<GetUserInfoResponse>.Ok(result, "Get user info successfully!");

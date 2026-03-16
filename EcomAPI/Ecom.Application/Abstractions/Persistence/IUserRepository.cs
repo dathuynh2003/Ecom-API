@@ -13,6 +13,8 @@ namespace Ecom.Application.Abstractions.Persistence
         //Task<bool> ExistsByUserNameAsync(string username);
         Task<User?> LoginAsync(string username, string password);
         Task<User?> GetByEmailAsync(string email);
+        Task<bool> IsPhoneInUseAsync(string phoneNumber);
+        Task<bool> IsPhoneInUseByAnotherUserAsync(string email, string phoneNumber);
         //Task<User?> GetByUserIdAsync(Guid userId);
         //Task<User> GetByUserNameAsync(string userName);
         //Task<IEnumerable<User>> GetAllUsersWithRoleUserAsync();

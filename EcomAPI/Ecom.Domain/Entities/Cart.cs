@@ -7,7 +7,7 @@ namespace Ecom.Domain.Entities
         public Guid Id { get; private set; } = Guid.NewGuid();
         public Guid? UserId { get; private set; }
         public User? User { get; private set; }
-        public string SessionID { get; private set; } = string.Empty;  // For guest carts
+        public string? SessionID { get; private set; }  // For guest carts
         public ICollection<CartItem> Items { get; private set; } = new List<CartItem>();
 
         public static Cart CreateForUser(Guid userId) => new Cart { UserId = userId };

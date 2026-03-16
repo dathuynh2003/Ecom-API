@@ -92,7 +92,6 @@ namespace Ecom.Infrastructure.Persistence.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<string>("SessionID")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
@@ -108,6 +107,14 @@ namespace Ecom.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("Carts");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("660e8400-e29b-41d4-a716-446655440000"),
+                            IsDeleted = false,
+                            UserId = new Guid("550e8400-e29b-41d4-a716-446655440000")
+                        });
                 });
 
             modelBuilder.Entity("Ecom.Domain.Entities.CartItem", b =>
@@ -191,38 +198,6 @@ namespace Ecom.Infrastructure.Persistence.Migrations
                     b.HasIndex("SpecificationKeyId");
 
                     b.ToTable("CategorySpecificationKeys");
-                });
-
-            modelBuilder.Entity("Ecom.Domain.Entities.EmailVerificationToken", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("ExpiresAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsUsed")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("Token")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Token")
-                        .IsUnique();
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("EmailVerificationTokens");
                 });
 
             modelBuilder.Entity("Ecom.Domain.Entities.Order", b =>
@@ -515,7 +490,7 @@ namespace Ecom.Infrastructure.Persistence.Migrations
                     b.Property<string>("AvatarUrl")
                         .HasColumnType("text");
 
-                    b.Property<Guid>("CartID")
+                    b.Property<Guid>("CartId")
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")
@@ -565,17 +540,52 @@ namespace Ecom.Infrastructure.Persistence.Migrations
                         new
                         {
                             Id = new Guid("550e8400-e29b-41d4-a716-446655440000"),
-                            CartID = new Guid("550e8400-e29b-41d4-a716-446655440000"),
-                            CreatedAt = new DateTime(2026, 3, 12, 10, 8, 46, 769, DateTimeKind.Utc).AddTicks(565),
+                            CartId = new Guid("660e8400-e29b-41d4-a716-446655440000"),
+                            CreatedAt = new DateTime(2026, 3, 15, 9, 17, 1, 327, DateTimeKind.Utc).AddTicks(5908),
                             Dob = new DateOnly(2003, 1, 31),
                             Email = "admin@ecom.com",
                             IsActive = true,
                             IsDeleted = false,
                             Name = "Admin",
-                            Password = "$2a$11$gAKAlMFpTUdx2cIW8/Aeh.SCY5GiywqaK.q3g0khZJXgR.Dggx9d2",
+                            Password = "$2a$11$t8mQ1b.d9lgkEIsMUuMCh.q69EHOvadWCtOR9REHkvqVdwWGGaVga",
                             PhoneNumber = "0839095701",
                             Role = 0
                         });
+                });
+
+            modelBuilder.Entity("Ecom.Domain.Entities.UserToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsUsed")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Token")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserTokens");
                 });
 
             modelBuilder.Entity("Ecom.Domain.Entities.Address", b =>
@@ -640,18 +650,6 @@ namespace Ecom.Infrastructure.Persistence.Migrations
                     b.Navigation("Category");
 
                     b.Navigation("SpecificationKey");
-                });
-
-            modelBuilder.Entity("Ecom.Domain.Entities.EmailVerificationToken", b =>
-                {
-                    b.HasOne("Ecom.Domain.Entities.User", "User")
-                        .WithMany("EmailVerificationTokens")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_users_email_verification_tokens");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Ecom.Domain.Entities.Order", b =>
@@ -763,6 +761,18 @@ namespace Ecom.Infrastructure.Persistence.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Ecom.Domain.Entities.UserToken", b =>
+                {
+                    b.HasOne("Ecom.Domain.Entities.User", "User")
+                        .WithMany("UserTokens")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_users_users_tokens");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Ecom.Domain.Entities.Brand", b =>
                 {
                     b.Navigation("Products");
@@ -806,7 +816,7 @@ namespace Ecom.Infrastructure.Persistence.Migrations
                     b.Navigation("Cart")
                         .IsRequired();
 
-                    b.Navigation("EmailVerificationTokens");
+                    b.Navigation("UserTokens");
                 });
 #pragma warning restore 612, 618
         }

@@ -16,9 +16,9 @@ namespace Ecom.Domain.Entities
         public string? AvatarUrl { get; private set; }
         public UserRole Role { get; private set; }
         public ICollection<Address> Addresses { get; private set; }
-        public Guid CartID { get; set; }
+        public Guid CartId { get; set; }
         public Cart Cart { get; set; }
-        public ICollection<EmailVerificationToken> EmailVerificationTokens { get; private set; }
+        public ICollection<UserToken> UserTokens { get; private set; }
 
         public static User Create (string name, string email, string phone, DateOnly dob, string password, UserRole role)
         {
@@ -26,6 +26,15 @@ namespace Ecom.Domain.Entities
                 throw new ArgumentException("Invalid email");
             
             return new User { Name = name, Email = email, PhoneNumber = phone, Dob = dob, Password = password, Role = role };
+        }
+
+        public void UpdateInfo(string name, string phone, DateOnly dob, string password, string? avatarUrl)
+        {
+            Name = name;
+            PhoneNumber = phone;
+            Dob = dob;
+            Password = password;
+            AvatarUrl = avatarUrl;
         }
 
         public void Activate() => IsActive = true;

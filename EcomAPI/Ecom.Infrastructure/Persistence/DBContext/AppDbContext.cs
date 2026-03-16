@@ -24,7 +24,7 @@ namespace Ecom.Infrastructure.Persistence.DBContext
         public DbSet<SpecificationKey> SpecificationKeys { get; set; }
         public DbSet<CategorySpecificationKey> CategorySpecificationKeys { get; set; }
         public DbSet<ProductSpecificationKey> ProductSpecificationKeys { get; set; }
-        public DbSet<EmailVerificationToken> EmailVerificationTokens { get; set; }
+        public DbSet<UserToken> UserTokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -125,13 +125,13 @@ namespace Ecom.Infrastructure.Persistence.DBContext
                 .HasForeignKey(psk => psk.SpecificationKeyId)
                 .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("fk_spec_keys_product_spec_keys");
-            // 10. User - EmailVerificationToken: One-to-Many
-            modelBuilder.Entity<EmailVerificationToken>()
+            // 10. User - UserToken: One-to-Many
+            modelBuilder.Entity<UserToken>()
                 .HasOne(evt => evt.User)
-                .WithMany(u => u.EmailVerificationTokens)
+                .WithMany(u => u.UserTokens)
                 .HasForeignKey(evt => evt.UserId)
                 .OnDelete(DeleteBehavior.Cascade)
-                .HasConstraintName("fk_users_email_verification_tokens");
+                .HasConstraintName("fk_users_users_tokens");
 
             // ID properties configuration
             modelBuilder.Entity<User>().HasKey(u => u.Id);
@@ -140,7 +140,7 @@ namespace Ecom.Infrastructure.Persistence.DBContext
             modelBuilder.Entity<Cart>().HasKey(p => p.Id);
             modelBuilder.Entity<Order>().HasKey(p => p.Id);
             modelBuilder.Entity<Payment>().HasKey(p => p.Id);
-            modelBuilder.Entity<EmailVerificationToken>().HasKey(p => p.Id);
+            modelBuilder.Entity<UserToken>().HasKey(p => p.Id);
 
             // int IDs auto-increment
             modelBuilder.Entity<CartItem>().HasKey(ci => ci.Id);
@@ -232,17 +232,19 @@ namespace Ecom.Infrastructure.Persistence.DBContext
                     .IsRequired()
                     .HasMaxLength(500);
             });
-            modelBuilder.Entity<EmailVerificationToken>(b =>
+            modelBuilder.Entity<UserToken>(b =>
             {
-                b.Property(evt => evt.Token)
+                b.Property(ut => ut.Token)
                     .IsRequired();
-                b.HasIndex(evt => evt.Token)
+                b.HasIndex(ut => ut.Token)
                    .IsUnique();
-                b.Property(evt => evt.ExpiresAt)
+                b.Property(ut => ut.ExpiresAt)
                     .IsRequired();
-                b.Property(evt => evt.IsUsed)
+                b.Property(ut => ut.IsUsed)
                     .IsRequired();
-                b.Property(evt => evt.UserId)
+                b.Property(ut => ut.UserId)
+                    .IsRequired();
+                b.Property(ut => ut.Type)
                     .IsRequired();
             });
 
@@ -284,9 +286,9 @@ namespace Ecom.Infrastructure.Persistence.DBContext
         }
 
         private static readonly Guid AdminId = new("550e8400-e29b-41d4-a716-446655440000");
+        private static readonly Guid AdminCartId = new("660e8400-e29b-41d4-a716-446655440000");
         private static void SeedData(ModelBuilder modelBuilder)
         {
-
             modelBuilder.Entity<User>().HasData(new
             {
                 Id = AdminId,
@@ -298,9 +300,19 @@ namespace Ecom.Infrastructure.Persistence.DBContext
                 CreatedAt = DateTime.UtcNow.AddDays(-1),
                 IsActive = true,
                 Role = UserRole.Admin,
-                CartID = AdminId,
+                CartId = AdminCartId,
+                IsDeleted = false,
+            });
+
+            // Seed Cart
+            modelBuilder.Entity<Cart>().HasData(new
+            {
+                Id = AdminCartId,
+                UserId = AdminId,
+                CreatedAt = DateTime.UtcNow.AddDays(-1),
                 IsDeleted = false,
             });
         }
+
     }
 }

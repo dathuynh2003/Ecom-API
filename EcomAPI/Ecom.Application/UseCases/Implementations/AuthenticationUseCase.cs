@@ -5,6 +5,7 @@ using Ecom.Application.Models.Requests.Auth;
 using Ecom.Application.Models.Responses.Auth;
 using Ecom.Application.UseCases.Interfaces;
 using Ecom.Domain.Entities;
+using Ecom.Domain.Enums;
 using Ecom.Shared.Common;
 using Ecom.Shared.Utils;
 
@@ -107,40 +108,43 @@ namespace Ecom.Application.UseCases.Implementations
         /// confirmation email has been sent. If registration fails, the response contains an error message.</returns>
         public async Task<ApiResponse<RegisterResponse>> RegisterAsync(RegisterRequest request)
         {
-            // Check confirm password
+            // Validate phone number
+            if (await _userRepo.IsPhoneInUseByAnotherUserAsync(request.Email, request.PhoneNumber))
+            {
+                return ApiResponse<RegisterResponse>.Fail("Phone number already in use");
+            }
+            // Validate password
             if (request.Password.Equals(request.ConfirmPassword) == false)
                 return ApiResponse<RegisterResponse>.Fail("Password and confirm password do not match");
-            // Check existing email
+            // Check existing user
             var existing = await _userRepo.GetByEmailAsync(request.Email);
             if (existing is not null)
             {
                 if (existing.IsActive)
                 {
+                    // Case 1: Email already registered and verified
                     return ApiResponse<RegisterResponse>.Fail("Email already registered");
                 }
-                return ApiResponse<RegisterResponse>.Fail("Email is not verified");
+                // Case 2: Existing but not verfied
+                await HandleExistingInactiveUserAsync(existing, request);
             }
-            // Hash password
-            var hashedPassword = BCrypt.Net.BCrypt.HashPassword(request.Password);
-            // Create user
-            var user = User.Create(request.Name, request.Email, request.PhoneNumber, request.Dob, hashedPassword, Domain.Enums.UserRole.Customer);
-            var cart = Cart.CreateForUser(user.Id);
-            user.Cart = cart;
-            user.CartID = cart.Id;
-            await _userRepo.AddAsync(user);
-            await _userRepo.SaveChangesAsync();
+            else
+            {
+                // Case 3: New user registration
+                existing = await HandleNewUserRegistrationAsync(request);
+            }
 
             // Generate email verification token
             var tokenValue = TokenUtils.GenerateToken();
-            var emailToken = EmailVerificationToken.Create(user.Id, tokenValue, DateTime.UtcNow.AddMinutes(5));
+            var emailToken = UserToken.Create(existing.Id, tokenValue, DateTime.UtcNow.AddMinutes(5), UserTokenType.EmailVerification);
             await _emailVerificationTokenRepo.AddAsync(emailToken);
             await _emailVerificationTokenRepo.SaveChangesAsync();
 
-            await SendVerificationEmailAsync(user, tokenValue);
+            await SendVerificationEmailAsync(existing, tokenValue);
 
             return ApiResponse<RegisterResponse>.Ok(new RegisterResponse
             {
-                Email = user.Email,
+                Email = existing.Email,
                 IsConfirmEmailSent = "true"
             }, "Registration successful. Please check your email to verify your account.");
         }
@@ -160,7 +164,7 @@ namespace Ecom.Application.UseCases.Implementations
             if (user is null)
                 return ApiResponse<string>.Fail("User not found");
             if (user.IsActive)
-                return ApiResponse<string>.Fail("Account is already verified");
+                return ApiResponse<string>.Ok(null, "Account is already verified");
 
             var newToken = TokenUtils.GenerateToken();
 
@@ -172,13 +176,14 @@ namespace Ecom.Application.UseCases.Implementations
             }
             else
             {
-                var emailToken = EmailVerificationToken.Create(user.Id, newToken, DateTime.UtcNow.AddMinutes(5));
+                var emailToken = UserToken.Create(user.Id, newToken, DateTime.UtcNow.AddMinutes(5), UserTokenType.EmailVerification);
                 await _emailVerificationTokenRepo.AddAsync(emailToken);
             }
             await _emailVerificationTokenRepo.SaveChangesAsync();
             await SendVerificationEmailAsync(user, newToken);
             return ApiResponse<string>.Ok(null, "Verification email resent successfully.");
         }
+
         /// <summary>
         /// Verifies a user's email address using the provided verification token asynchronously.
         /// </summary>
@@ -195,14 +200,22 @@ namespace Ecom.Application.UseCases.Implementations
             {
                 return ApiResponse<string>.Fail("Invalid token.");
             }
-            if (emailToken.IsUsed || emailToken.ExpiresAt < DateTime.UtcNow)
+            if (emailToken.Type != UserTokenType.EmailVerification)
             {
-                return ApiResponse<string>.Fail("Expired token.");
+                return ApiResponse<string>.Fail("Invalid token.");
             }
             var user = await _userRepo.GetByIdAsync(emailToken.UserId);
             if (user == null)
             {
                 return ApiResponse<string>.Fail("User not found.");
+            }
+            if (user.IsActive)
+            {
+                return ApiResponse<string>.Ok(null, "Email already verified.");
+            }
+            if (emailToken.IsUsed || emailToken.ExpiresAt < DateTime.UtcNow)
+            {
+                return ApiResponse<string>.Fail("Expired token.");
             }
             user.Activate();
             emailToken.MarkAsUsed();
@@ -222,6 +235,28 @@ namespace Ecom.Application.UseCases.Implementations
             var subject = "Verify your email";
             var body = EmailUtils.GenerateVerificationEmailBody(user.Name, verifyLink);
             await _emailService.SendEmailAsync(user.Email, subject, body);
+        }
+
+        private async Task<User> HandleExistingInactiveUserAsync(User existingUser, RegisterRequest reuqest)
+        {
+            // Update existing user info
+            var hashedPassword = BCrypt.Net.BCrypt.HashPassword(reuqest.Password);
+            existingUser.UpdateInfo(reuqest.Name, reuqest.PhoneNumber, reuqest.Dob, hashedPassword, existingUser.AvatarUrl);
+            await _userRepo.UpdateAsync(existingUser);
+            await _userRepo.SaveChangesAsync();
+
+            return existingUser;
+        }
+        private async Task<User> HandleNewUserRegistrationAsync(RegisterRequest request)
+        {
+            var hasdedPassword = BCrypt.Net.BCrypt.HashPassword(request.Password);
+            var user = User.Create(request.Name, request.Email, request.PhoneNumber, request.Dob, hasdedPassword, Domain.Enums.UserRole.Customer);
+            var cart = Cart.CreateForUser(user.Id);
+            user.Cart = cart;
+            user.CartId = cart.Id;
+            await _userRepo.AddAsync(user);
+            await _userRepo.SaveChangesAsync();
+            return user;
         }
     }
 }

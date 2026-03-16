@@ -27,9 +27,7 @@ namespace Ecom.WebAPI.Controllers
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
             var result = await _authUseCase.LoginAsync(request);
-            if (result.Success)
-                return Ok(result);
-            return Unauthorized(result);
+            return Ok(result);
         }
 
         [HttpPost("refresh-token")]
@@ -65,9 +63,7 @@ namespace Ecom.WebAPI.Controllers
         public async Task<IActionResult> Register([FromBody] RegisterRequest request)
         {
             var result = await _authUseCase.RegisterAsync(request);
-            if (result.Success)
-                return Ok(result);
-            return BadRequest(result);
+            return Ok(result);
         }
 
         [HttpGet("verify-email")]
@@ -76,9 +72,7 @@ namespace Ecom.WebAPI.Controllers
         public async Task<IActionResult> VerifyEmail([FromQuery] string token)
         {
             var result = await _authUseCase.VerifyEmailAsync(token);
-            if (result.Success)
-                return Ok(result);
-            return BadRequest(result);
+            return Ok(result);
         }
 
         [HttpPost("resend-verification-email")]
@@ -87,9 +81,7 @@ namespace Ecom.WebAPI.Controllers
         public async Task<IActionResult> ResendVerificationEmail([FromQuery] string email)
         {
             var result = await _authUseCase.ResendVerificationEmailAsync(email);
-            if (result.Success)
-                return Ok(result);
-            return BadRequest(result);
+            return Ok(result);
         }
     }
 }
