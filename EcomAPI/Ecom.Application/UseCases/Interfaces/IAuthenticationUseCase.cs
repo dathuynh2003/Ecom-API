@@ -12,5 +12,7 @@ namespace Ecom.Application.UseCases.Interfaces
         Task<ApiResponse<string>> LogoutAsync(Guid userId);
         Task<ApiResponse<string>> VerifyEmailAsync(string token);
         Task<ApiResponse<string>> ResendVerificationEmailAsync(string email);
+        Task<ApiResponse<string>> ForgotPasswordAsync(string email);
+        Task<ApiResponse<string>> ResetPasswordAsync(ResetPasswordRequest request);
     }
 }

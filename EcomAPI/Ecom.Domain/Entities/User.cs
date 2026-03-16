@@ -37,6 +37,8 @@ namespace Ecom.Domain.Entities
             AvatarUrl = avatarUrl;
         }
 
+        public void ChangePassword(string newPassword) => Password = newPassword;
+
         public void Activate() => IsActive = true;
         public void ChangeRole(UserRole newRole) => Role = newRole;  // Chỉ nếu authorized
         public bool IsAdmin() => Role == UserRole.Admin;

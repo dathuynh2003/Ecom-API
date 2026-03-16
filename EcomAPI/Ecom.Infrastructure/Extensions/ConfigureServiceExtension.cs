@@ -14,7 +14,7 @@ namespace Ecom.Infrastructure.Extensions
             //Repositories
             _ = services.AddScoped(typeof(IGenericRepository<,>), typeof(GenericRepository<,>));
             _ = services.AddScoped<IUserRepository, UserRepository>();
-            _ = services.AddScoped<IEmailVerificationTokenRepository, EmailVerificationTokenRepository>();
+            _ = services.AddScoped<IUserTokenRepository, UserTokenRepository>();
 
             // Services
             _ = services.AddScoped<IJwtService, JwtTokenService>();

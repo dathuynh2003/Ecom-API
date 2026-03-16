@@ -21,5 +21,19 @@ namespace Ecom.Shared.Utils
                 </body>
                 </html>";
         }
+
+        public static string GeneratePasswordResetEmailBody(string name, string resetLink)
+        {
+            return $@"
+                <html>
+                <body>
+                    <h2>Password Reset Request</h2>
+                    <p>Hi {name},</p>
+                    <p>We received a request to reset your password. Please click the link below to set a new password:</p>
+                    <a href='{resetLink}' style='display:inline-block;padding:10px 20px;font-size:16px;color:#fff;background-color:#dc3545;text-decoration:none;border-radius:5px;'>Reset Password</a>
+                    <p>If you did not request a password reset, please ignore this email.</p>
+                </body>
+                </html>";
+        }
     }
 }

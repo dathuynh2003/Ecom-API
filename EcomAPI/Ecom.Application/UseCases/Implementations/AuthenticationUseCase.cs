@@ -16,14 +16,14 @@ namespace Ecom.Application.UseCases.Implementations
         private readonly IUserRepository _userRepo;
         private readonly IJwtService _jwtService;
         private readonly IEmailService _emailService;
-        private readonly IEmailVerificationTokenRepository _emailVerificationTokenRepo;
+        private readonly IUserTokenRepository _userTokenRepo;
 
-        public AuthenticationUseCase(IUserRepository userRepo, IJwtService jwtService, IEmailService emailService, IEmailVerificationTokenRepository emailVerificationTokenRepo)
+        public AuthenticationUseCase(IUserRepository userRepo, IJwtService jwtService, IEmailService emailService, IUserTokenRepository userToken)
         {
             _userRepo = userRepo;
             _jwtService = jwtService;
             _emailService = emailService;
-            _emailVerificationTokenRepo = emailVerificationTokenRepo;
+            _userTokenRepo = userToken;
         }
 
         /// <summary>
@@ -137,8 +137,8 @@ namespace Ecom.Application.UseCases.Implementations
             // Generate email verification token
             var tokenValue = TokenUtils.GenerateToken();
             var emailToken = UserToken.Create(existing.Id, tokenValue, DateTime.UtcNow.AddMinutes(5), UserTokenType.EmailVerification);
-            await _emailVerificationTokenRepo.AddAsync(emailToken);
-            await _emailVerificationTokenRepo.SaveChangesAsync();
+            await _userTokenRepo.AddAsync(emailToken);
+            await _userTokenRepo.SaveChangesAsync();
 
             await SendVerificationEmailAsync(existing, tokenValue);
 
@@ -168,18 +168,18 @@ namespace Ecom.Application.UseCases.Implementations
 
             var newToken = TokenUtils.GenerateToken();
 
-            var existingToken = await _emailVerificationTokenRepo.GetByUserAsync(user.Id);
+            var existingToken = await _userTokenRepo.GetByUserAsync(user.Id);
             if (existingToken is not null)
             {
                 existingToken.Refresh(newToken, DateTime.UtcNow.AddMinutes(5));
-                await _emailVerificationTokenRepo.UpdateAsync(existingToken);
+                await _userTokenRepo.UpdateAsync(existingToken);
             }
             else
             {
                 var emailToken = UserToken.Create(user.Id, newToken, DateTime.UtcNow.AddMinutes(5), UserTokenType.EmailVerification);
-                await _emailVerificationTokenRepo.AddAsync(emailToken);
+                await _userTokenRepo.AddAsync(emailToken);
             }
-            await _emailVerificationTokenRepo.SaveChangesAsync();
+            await _userTokenRepo.SaveChangesAsync();
             await SendVerificationEmailAsync(user, newToken);
             return ApiResponse<string>.Ok(null, "Verification email resent successfully.");
         }
@@ -195,7 +195,7 @@ namespace Ecom.Application.UseCases.Implementations
         /// message if the email is verified; otherwise, an error message indicating the reason for failure.</returns>
         public async Task<ApiResponse<string>> VerifyEmailAsync(string token)
         {
-            var emailToken = await _emailVerificationTokenRepo.GetByToken(token);
+            var emailToken = await _userTokenRepo.GetByToken(token);
             if (emailToken == null)
             {
                 return ApiResponse<string>.Fail("Invalid token.");
@@ -222,12 +222,13 @@ namespace Ecom.Application.UseCases.Implementations
             await _userRepo.UpdateAsync(user);
             await _userRepo.SaveChangesAsync();
             // Optionally, you can delete the token after successful verification
-            //await _emailVerificationTokenRepo.HardDeleteAsync(emailToken);
-            await _emailVerificationTokenRepo.UpdateAsync(emailToken);
-            await _emailVerificationTokenRepo.SaveChangesAsync();
+            //await _userTokenRepo.HardDeleteAsync(emailToken);
+            await _userTokenRepo.UpdateAsync(emailToken);
+            await _userTokenRepo.SaveChangesAsync();
             return ApiResponse<string>.Ok(null, "Email verified successfully.");
         }
 
+        // ==========================================================
         private async Task SendVerificationEmailAsync(User user, string token)
         {
             var verifyLink = $"http://localhost:3101/verify-email?token={token}";
@@ -257,6 +258,69 @@ namespace Ecom.Application.UseCases.Implementations
             await _userRepo.AddAsync(user);
             await _userRepo.SaveChangesAsync();
             return user;
+        }
+
+        public async Task<ApiResponse<string>> ForgotPasswordAsync(string email)
+        {
+            if (string.IsNullOrEmpty(email))
+                return ApiResponse<string>.Fail("Email is required");
+
+            var user = await _userRepo.GetByEmailAsync(email);
+
+            // Always return success response to prevent email enumeration, but only send email if user exists and is active
+            if (user is not null && user.IsActive)
+            {
+                await CreatePasswordResetTokenAndSendEmailAsync(user);
+            }
+            return ApiResponse<string>.Ok(null, "Password reset link has been sent");
+
+        }
+
+        public async Task<ApiResponse<string>> ResetPasswordAsync(ResetPasswordRequest request)
+        {
+            if (request is null)
+                return ApiResponse<string>.Fail("Request cannot be null");
+
+            if (string.IsNullOrWhiteSpace(request.Token))
+                return ApiResponse<string>.Fail("Invalid token.");
+
+            if (string.IsNullOrWhiteSpace(request.NewPassword) || string.IsNullOrWhiteSpace(request.ConfirmPassword))
+                return ApiResponse<string>.Fail("Password and confirm password are required.");
+
+            if (!request.NewPassword.Equals(request.ConfirmPassword))
+                return ApiResponse<string>.Fail("Password and confirm password do not match.");
+
+            var resetToken = await _userTokenRepo.GetValidTokenByToken(request.Token);
+            if (resetToken is null || resetToken.Type != UserTokenType.PasswordReset)
+                return ApiResponse<string>.Fail("Invalid token.");
+
+            var user = await _userRepo.GetByIdAsync(resetToken.UserId);
+            if (user is null)
+                return ApiResponse<string>.Fail("User not found.");
+            var hashedPassword = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+            user.ChangePassword(hashedPassword);
+            resetToken.MarkAsUsed();
+            await _userRepo.UpdateAsync(user);
+            await _userRepo.SaveChangesAsync();
+            await _userTokenRepo.UpdateAsync(resetToken);
+            await _userTokenRepo.SaveChangesAsync();
+
+            await _jwtService.RevokeRefreshTokenAsync(user.Id);
+
+            return ApiResponse<string>.Ok(null, "Password reset successful.");
+        }
+
+        private async Task CreatePasswordResetTokenAndSendEmailAsync(User user)
+        {
+            var tokenValue = TokenUtils.GenerateToken();
+            var passwordResetToken = UserToken.Create(user.Id, tokenValue, DateTime.UtcNow.AddMinutes(15), UserTokenType.PasswordReset);
+            await _userTokenRepo.AddAsync(passwordResetToken);
+            await _userTokenRepo.SaveChangesAsync();
+            var resetLink = $"http://localhost:3101/reset-password?token={tokenValue}";
+            //var resetLink = $"{_appSettings.FrontendBaseUrl}/reset-password?token={tokenValue}";
+            var subject = "Password Reset Request";
+            var body = EmailUtils.GeneratePasswordResetEmailBody(user.Name, resetLink);
+            await _emailService.SendEmailAsync(user.Email, subject, body);
         }
     }
 }

@@ -83,5 +83,23 @@ namespace Ecom.WebAPI.Controllers
             var result = await _authUseCase.ResendVerificationEmailAsync(email);
             return Ok(result);
         }
+
+        [HttpPost("request-password-reset")]
+        [ProducesResponseType(typeof(ApiResponse<string>), (int)HttpStatusCode.OK)]
+        [ProducesResponseType((int)HttpStatusCode.BadRequest)]
+        public async Task<IActionResult> RequestPasswordReset([FromQuery] string email)
+        {
+            var rsullt = await _authUseCase.ForgotPasswordAsync(email);
+            return Ok(rsullt);
+        }
+
+        [HttpPost("reset-password")]
+        [ProducesResponseType(typeof(ApiResponse<string>), (int)HttpStatusCode.OK)]
+        [ProducesResponseType((int)HttpStatusCode.BadRequest)]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+        {
+            var result = await _authUseCase.ResetPasswordAsync(request);
+            return Ok(result);
+        }
     }
 }

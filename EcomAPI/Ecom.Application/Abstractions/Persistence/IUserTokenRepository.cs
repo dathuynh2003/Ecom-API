@@ -2,9 +2,10 @@
 
 namespace Ecom.Application.Abstractions.Persistence
 {
-    public interface IEmailVerificationTokenRepository : IGenericRepository<UserToken, Guid>
+    public interface IUserTokenRepository : IGenericRepository<UserToken, Guid>
     {
         public Task<UserToken?> GetByToken(string token);
+        public Task<UserToken?> GetValidTokenByToken(string Token);
         public Task<UserToken?> GetByUserAsync(Guid userId);
     }
 }
