@@ -10,5 +10,28 @@ namespace Ecom.Domain.Entities
         public string Slug { get; private set; }
         public ICollection<Product> Products { get; private set; }
         public ICollection<CategorySpecificationKey> CategorySpecificationKeys { get; private set; }
+
+        public static Category Create(string name, string? description, string slug)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                throw new ArgumentException("Category name cannot be null or empty.");
+            
+            return new Category
+            {
+                Name = name,
+                Description = description,
+                Slug = slug,
+            };
+        }
+
+        public void Update(string name, string? description, string slug)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                throw new ArgumentException("Category name cannot be null or empty.");
+            
+            Name = name;
+            Description = description;
+            Slug = slug;
+        }
     }
 }

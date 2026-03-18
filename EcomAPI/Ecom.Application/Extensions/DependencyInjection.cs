@@ -8,7 +8,9 @@ namespace Ecom.Application.Extensions
         {
             _ = services.AddScoped<UseCases.Interfaces.IAuthenticationUseCase, UseCases.Implementations.AuthenticationUseCase>();
             _ = services.AddScoped<UseCases.Interfaces.IUserUseCase, UseCases.Implementations.UserUseCase>();
-
+            _ = services.AddScoped<UseCases.Interfaces.IBrandUseCase, UseCases.Implementations.BrandUseCase>();
+            _ = services.AddScoped<UseCases.Interfaces.ICategoryUseCase, UseCases.Implementations.CategoryUseCase>();
+            _ = services.AddScoped<UseCases.Interfaces.IProductUseCase, UseCases.Implementations.ProductUseCase>();
             return services;
         }
 

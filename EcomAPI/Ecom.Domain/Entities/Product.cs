@@ -35,5 +35,22 @@ namespace Ecom.Domain.Entities
                 Slug = slug,
             };
         }
+
+        public void Update(string name, string description, decimal price, int stockQuantity, int categoryId, int brandId, string slug)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                throw new ArgumentException("Name required");
+            if (price < 0)
+                throw new ArgumentException("Price cannot be negative");
+            if (stockQuantity < 0)
+                throw new ArgumentException("Stock quantity cannot be negative");
+            Name = name;
+            Description = description;
+            Price = price;
+            StockQuantity = stockQuantity;
+            CategoryId = categoryId;
+            BrandId = brandId;
+            Slug = slug;
+        }
     }
 }

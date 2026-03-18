@@ -9,14 +9,14 @@ namespace Ecom.Domain.Entities
         public bool IsPrimary { get; private set; }
         public int ProductId { get; private set; }
         public Product Product { get; private set; }
-        public static ProductImage Create(string url, int productId)
+        public static ProductImage Create(string url, bool isPrimary)
         {
             if (string.IsNullOrWhiteSpace(url))
                 throw new ArgumentException("URL required");
             return new()
             {
                 ImageUrl = url,
-                ProductId = productId
+                IsPrimary = isPrimary
             };
         }
     }

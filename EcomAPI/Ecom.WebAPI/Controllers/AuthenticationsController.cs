@@ -35,7 +35,7 @@ namespace Ecom.WebAPI.Controllers
         [ProducesResponseType((int)HttpStatusCode.BadRequest)]
         public async Task<IActionResult> RefreshToken(TokenRequest request)
         {
-            var rs = await _authUseCase.GetNewAccessToken(request);
+          var rs = await _authUseCase.GetNewAccessToken(request);
             if (rs.Success) return Ok(rs);
             return BadRequest(rs);
         }

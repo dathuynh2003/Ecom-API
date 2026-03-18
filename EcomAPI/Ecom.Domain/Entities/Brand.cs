@@ -9,5 +9,29 @@ namespace Ecom.Domain.Entities
         public string? LogoUrl { get; private set; } = string.Empty;
         public string Slug { get; private set; }
         public ICollection<Product> Products { get; private set; }
+
+        public static Brand Create(string name, string? logoUrl, string slug)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                throw new ArgumentException("Brand name cannot be null or empty.");
+            
+            return new Brand
+            {
+                Name = name,
+                LogoUrl = logoUrl,
+                Slug = slug,
+            };
+        }
+
+        public void Update(string name, string? logoUrl, string slug)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                throw new ArgumentException("Brand name cannot be null or empty.");
+            
+            Name = name;
+            LogoUrl = logoUrl;
+            Slug = slug;
+        }
+
     }
 }

@@ -10,5 +10,14 @@ namespace Ecom.Domain.Entities
         public string? Value { get; private set; } = string.Empty;
         public Product Product { get; private set; }
         public SpecificationKey SpecificationKey { get; private set; }
+
+        public static ProductSpecificationKey Create(int specificationKeyId, string value)
+        {
+            return new ProductSpecificationKey
+            {
+                SpecificationKeyId = specificationKeyId,
+                Value = value
+            };
+        }
     }
 }
