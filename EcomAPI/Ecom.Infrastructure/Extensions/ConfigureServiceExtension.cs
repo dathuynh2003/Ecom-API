@@ -18,6 +18,8 @@ namespace Ecom.Infrastructure.Extensions
             _ = services.AddScoped<IProductRepository, ProductRepository>();
             _ = services.AddScoped<IBrandRepository, BrandRepository>();
             _ = services.AddScoped<ICategoryRepository, CategoryRepository>();
+            _ = services.AddScoped<ISpecificationKeyRepository, SpecificationKeyRepository>();
+            _ = services.AddScoped<ICategorySpecKeyRepository, CategorySpecKeyRepository>();
 
             // Services
             _ = services.AddScoped<IJwtService, JwtTokenService>();

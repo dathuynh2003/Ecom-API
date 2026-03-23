@@ -11,6 +11,8 @@ namespace Ecom.Application.Extensions
             _ = services.AddScoped<UseCases.Interfaces.IBrandUseCase, UseCases.Implementations.BrandUseCase>();
             _ = services.AddScoped<UseCases.Interfaces.ICategoryUseCase, UseCases.Implementations.CategoryUseCase>();
             _ = services.AddScoped<UseCases.Interfaces.IProductUseCase, UseCases.Implementations.ProductUseCase>();
+            _ = services.AddScoped<UseCases.Interfaces.ICategorySpecificationKeyUseCase, UseCases.Implementations.CategorySpecificationKeyUseCase>();
+            _ = services.AddScoped<UseCases.Interfaces.ISpecificationKeyUseCase, UseCases.Implementations.SpecificationKeyUseCase>();
             return services;
         }
 

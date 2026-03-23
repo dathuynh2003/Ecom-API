@@ -9,9 +9,9 @@
         public int StockQuantity { get; set; }
         public int CategoryId { get; set; }
         public int BrandId { get; set; }
-        // Images
-        public List<ProductImageRequest> Images { get; set; }
-        // Specs
-        public List<ProductSpecificationRequest> Specifications { get; set; }
+        //// Images
+        //public List<ProductImageRequest> Images { get; set; }
+        //// Specs
+        //public List<ProductSpecificationRequest> Specifications { get; set; }
     }
 }

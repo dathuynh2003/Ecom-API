@@ -10,6 +10,10 @@ namespace Ecom.Shared.Utils
         {
             if (string.IsNullOrEmpty(phrase))
                 return string.Empty;
+
+            // Chuyển đ/Đ thành d/D trước
+            phrase = phrase.Replace('đ', 'd').Replace('Đ', 'D');
+
             // Normalize and remove diacritics (accents)
             string normalized = phrase.Normalize(NormalizationForm.FormD);
             var sb = new StringBuilder();

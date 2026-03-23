@@ -14,6 +14,6 @@ namespace Ecom.Application.UseCases.Interfaces
         Task<ApiResponse<PagingResult<ProductResponse>>> GetByCategorySlugAsync(string categorySlug, PagingRequest request, CancellationToken ct = default);
         Task<ApiResponse<PagingResult<ProductResponse>>> GetByBrandSlugAsync(string brandSlug, PagingRequest request, CancellationToken ct = default);
         Task<ApiResponse<PagingResult<ProductResponse>>> GetByCategoryBrandSlugAsync(string categorySlug, string brandSlug, PagingRequest request, CancellationToken ct = default);
-        Task<ApiResponse<PagingResult<ProductResponse>>> GetDetailBySlugAsync(string productSlug, CancellationToken ct = default);
+        Task<ApiResponse<ProductResponse>> GetDetailBySlugAsync(string productSlug, CancellationToken ct = default);
     }
 }
